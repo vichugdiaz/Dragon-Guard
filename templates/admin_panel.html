@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración - {{ config.nombre_empresa }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: {{ config.estilos.fuente }};
+        }
+        .contador-verde {
+            color: green;
+            font-weight: bold;
+        }
+        .contador-rojo {
+            color: red;
+            font-weight: bold;
+        }
+        .logo-img {
+            max-height: 60px;
+        }
+        .logo-sistema {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            height: 40px;
+        }
+        .table-responsive {
+            margin-bottom: 1rem;
+        }
+        .auto-descarga-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <img src="{{ url_for('static', filename='logos/default_logo.png') }}" alt="Logo Sistema" class="logo-sistema">
+    <div class="container-fluid mt-4">
+        <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename='logos/' + config.logo_filename) }}" alt="Logo Empresa" class="logo-img">
+            <h2 class="mt-2">{{ config.nombre_empresa }} - Panel de Administración</h2>
+        </div>
+
+        <div class="auto-descarga-container">
+            <form id="autoDownloadForm" class="d-flex align-items-center">
+                <div class="form-check form-switch me-2">
+                    <input class="form-check-input" type="checkbox" id="toggleAutoDownload">
+                    <label class="form-check-label" for="toggleAutoDownload">Auto informe diario</label>
+                </div>
+                <input type="time" id="horaAutoDownload" class="form-control form-control-sm" style="width: 120px;">
+            </form>
+        </div>
+
+        {% if dias_restantes is not none %}
+            <div class="text-center mb-3">
+                <span class="{% if dias_restantes <= 30 %}contador-rojo{% else %}contador-verde{% endif %}">
+                    Licencia activa - {{ dias_restantes }} día(s) restantes
+                </span>
+                {% if dias_restantes <= 30 %}
+                    <div class="text-danger small">Su licencia está por vencer</div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="alert alert-info text-center alert-dismissible fade show" role="alert">
+                        {{ msg }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="mb-4 text-center">
+            <a href="{{ url_for('admin_configuracion') }}" class="btn btn-outline-primary btn-sm">Configuración Visual</a>
+            <button onclick="confirmarRestaurar()" class="btn btn-outline-danger btn-sm">Restaurar Configuración</button>
+            <a href="{{ url_for('licencia') }}" class="btn btn-outline-warning btn-sm">Licencia</a>
+            <a href="{{ url_for('logout_admin') }}" class="btn btn-outline-danger btn-sm">Cerrar sesión</a>
+        </div>
+
+        <h5>Importar empleados desde Excel (.xlsx)</h5>
+        <form action="{{ url_for('importar_empleados') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+            <div class="input-group">
+                <input type="file" name="archivo" accept=".xlsx" class="form-control" required>
+                <button type="submit" class="btn btn-success btn-sm">Importar</button>
+            </div>
+        </form>
+
+        <h5>Exportar empleados existentes</h5>
+        <div class="mb-3">
+            <a href="{{ url_for('exportar_empleados') }}" class="btn btn-secondary btn-sm">Exportar a Excel</a>
+        </div>
+
+        <h5>Exportar historial filtrado</h5>
+        <form method="GET" class="row g-2 align-items-end mb-4">
+            <div class="col-md-3 col-sm-6">
+                <input type="text" name="cedula" class="form-control" placeholder="Filtrar por cédula">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Desde:</label>
+                <input type="date" name="fecha_inicio" class="form-control">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Hasta:</label>
+                <input type="date" name="fecha_fin" class="form-control">
+            </div>
+            <div class="col-md-3 col-sm-6 d-flex gap-2">
+                <button type="submit" formaction="{{ url_for('exportar_excel') }}" class="btn btn-outline-success btn-sm w-100">Excel</button>
+                <button type="submit" formaction="{{ url_for('exportar_pdf') }}" class="btn btn-outline-danger btn-sm w-100">PDF</button>
+            </div>
+        </form>
+
+        <h5>Cambiar clave del administrador</h5>
+        <form action="{{ url_for('cambiar_clave_admin') }}" method="POST" class="mb-4 row g-2">
+            <div class="col-md-4 col-sm-8">
+                <input type="password" name="nueva_clave" class="form-control text-center" placeholder="Nueva clave" required>
+            </div>
+            <div class="col-md-2 col-sm-4">
+                <button type="submit" class="btn btn-warning btn-sm w-100">Cambiar</button>
+            </div>
+        </form>
+
+        <hr>
+        <h5>Lista de empleados registrados</h5>
+        <div class="mb-3 text-end">
+            <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-dark btn-sm">Actualizar lista</a>
+        </div>
+
+        {% if empleados %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Cédula</th>
+                        <th>Nombre</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in empleados %}
+                    <tr>
+                        <td>{{ emp.cedula }}</td>
+                        <td>{{ emp.nombre }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('editar_empleado', id=emp.id) }}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{{ url_for('eliminar_empleado', id=emp.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que desea eliminar este empleado?')">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="alert alert-info text-center">📰 No hay empleados registrados actualmente.</div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">Volver al inicio</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmarRestaurar() {
+            if (confirm("¿Está seguro que desea restaurar la configuración por defecto?")) {
+                window.location.href = "{{ url_for('restaurar_config') }}";
+            }
+        }
+
+        const toggle = document.getElementById("toggleAutoDownload");
+        const horaInput = document.getElementById("horaAutoDownload");
+
+        function cargarConfiguracionAutoInforme() {
+            fetch("/auto_config")
+                .then(r => r.json())
+                .then(config => {
+                    toggle.checked = config.activo;
+                    horaInput.value = config.hora || "";
+                    horaInput.disabled = !toggle.checked;
+                });
+        }
+
+        function guardarAutoInforme() {
+            const activo = toggle.checked;
+            const hora = horaInput.value;
+            fetch("/guardar_auto_informe", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `activo=${activo}&hora=${hora}`
+            })
+            .then(r => r.json())
+            .then(d => {
+                console.log("Configuración auto informe guardada");
+            });
+        }
+
+        toggle.addEventListener("change", function() {
+            horaInput.disabled = !this.checked;
+            guardarAutoInforme();
+        });
+
+        horaInput.addEventListener("change", guardarAutoInforme);
+
+        window.onload = cargarConfiguracionAutoInforme;
+    </script>
+</body>
+</html>
+
