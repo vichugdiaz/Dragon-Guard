@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Database
+instance/dragon_guard.db
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# Configs and JSON
+auto_config.json
+config.json
+datos.json
+
+# VSCode / PyCharm / JetBrains
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
