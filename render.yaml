@@ -1,8 +1,9 @@
-services:
+serviservices:
   - type: web
     name: dragon-guard-web
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
     runtime: python
-    pythonVersion: 3.10
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
+    envVars:
+      - key: FLASK_ENV
+        value: production
