@@ -1,4 +1,4 @@
-serviservices:
+services:
   - type: web
     name: dragon-guard-web
     runtime: python
