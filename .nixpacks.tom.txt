@@ -1,2 +1,0 @@
-[variables]
-PYTHON_VERSION = "3.10"
