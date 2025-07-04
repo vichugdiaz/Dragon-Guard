@@ -18,6 +18,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 import shutil
 
+
 # =====================
 # CONFIGURACIÓN BÁSICA
 # =====================
@@ -765,13 +766,14 @@ atexit.register(lambda: scheduler.shutdown())
 # =====================
 
 
-from flask import Flask
-app = Flask(__name__)
-
-# Rutas aquí
-
-crear_bd_si_no_existe()
-inicializar_auto_informe()
-
 if __name__ == "__main__":
+    with app.app_context():
+        crear_bd_si_no_existe()
+        inicializar_auto_informe()
     app.run(debug=True)
+else:
+    # Ejecutar también cuando Gunicorn lo importe
+    with app.app_context():
+        crear_bd_si_no_existe()
+        inicializar_auto_informe()
+
