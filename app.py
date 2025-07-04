@@ -765,17 +765,13 @@ atexit.register(lambda: scheduler.shutdown())
 # =====================
 
 
-
-
-# (importa tus funciones como siempre)
+from flask import Flask
 app = Flask(__name__)
 
-# ... aquí va el resto de tu código ...
+# Rutas aquí
 
-# 🔁 Ejecutar estas funciones siempre, incluso cuando lo carga Gunicorn
 crear_bd_si_no_existe()
 inicializar_auto_informe()
 
-# Solo activa el servidor Flask si lo corres localmente
 if __name__ == "__main__":
     app.run(debug=True)
