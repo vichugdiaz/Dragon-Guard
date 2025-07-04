@@ -764,8 +764,18 @@ atexit.register(lambda: scheduler.shutdown())
 # EJECUCIÓN PRINCIPAL
 # =====================
 
-if __name__ == "__main__":
-    crear_bd_si_no_existe()
-    inicializar_auto_informe()
-    app.run(debug=True)
 
+
+
+# (importa tus funciones como siempre)
+app = Flask(__name__)
+
+# ... aquí va el resto de tu código ...
+
+# 🔁 Ejecutar estas funciones siempre, incluso cuando lo carga Gunicorn
+crear_bd_si_no_existe()
+inicializar_auto_informe()
+
+# Solo activa el servidor Flask si lo corres localmente
+if __name__ == "__main__":
+    app.run(debug=True)
