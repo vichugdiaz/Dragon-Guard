@@ -1,7 +1,6 @@
 services:
   - type: web
     name: dragon-guard-web
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.app"
     runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
