@@ -171,14 +171,6 @@ def generar_informe_programado():
             print(f"❌ Error al generar informe automático: {e}")
 
 
-def generar_informe_programado():
-    with app.app_context():
-        try:
-            generar_excel_automatico()
-        except Exception as e:
-            print(f"❌ Error al generar informe automático: {e}")
-
-
 def inicializar_auto_informe():
     if os.path.exists(AUTO_CONFIG_PATH):
         with open(AUTO_CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -755,19 +747,6 @@ def guardar_auto_informe():
 
 
 @app.route("/auto_config")
-def auto_config():
-    if os.path.exists(AUTO_CONFIG_PATH):
-        try:
-            with open(AUTO_CONFIG_PATH, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                return jsonify(config)
-        except Exception:
-            return jsonify({"activo": False, "hora": "00:00"})
-    else:
-        return jsonify({"activo": False, "hora": "00:00"})
-
-
-@app.route("/auto_config")
 def obtener_auto_config():
     if os.path.exists(AUTO_CONFIG_PATH):
         try:
@@ -789,6 +768,10 @@ atexit.register(lambda: scheduler.shutdown())
 # =====================
 # EJECUCIÓN PRINCIPAL
 # =====================
+
+@app.route("/health")
+def health():
+    return "OK", 200
 
 
 if __name__ == "__main__":
