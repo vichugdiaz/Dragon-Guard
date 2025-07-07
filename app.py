@@ -18,6 +18,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 import atexit
 import shutil
+import pytz
+ZONA_HORARIA = pytz.timezone("America/Bogota")
 
 
 # =====================
@@ -128,38 +130,36 @@ def crear_bd_si_no_existe():
 
 
 def generar_excel_automatico():
-    # Obtener fecha actual
     fecha = ahora_colombia().strftime("%Y-%m-%d")
     nombre_archivo = f"reporte_diario_{fecha}.xlsx"
 
-    # Ruta segura para guardar el archivo
     basedir = os.path.abspath(os.path.dirname(__file__))
     carpeta_destino = os.path.join(basedir, "instance")
     ruta_completa = os.path.join(carpeta_destino, nombre_archivo)
-
-    # Crear carpeta instance si no existe
     os.makedirs(carpeta_destino, exist_ok=True)
 
-    # Crear libro Excel
+    registros = obtener_registros_filtrados(None, fecha, fecha)
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Informe Diario"
 
-    # Encabezado de ejemplo
-    ws.append(["Cédula", "Nombre", "Hora Entrada", "Hora Salida", "Duración"])
+    ws.append(["Cédula", "Nombre", "Hora Entrada", "Hora Salida", "Estado", "Tiempo"])
 
-    # Puedes reemplazar esta parte con tus registros reales
-    datos = [
-        ["12345678", "Juan Pérez", "08:00", "17:00", "9h"],
-        ["87654321", "Ana Gómez", "08:15", "17:10", "8h 55m"]
-    ]
+    for r in registros:
+        ws.append([
+            r["cedula"],
+            r["nombre"],
+            r["hora_entrada"],
+            r["hora_salida"],
+            r["estado"],
+            r["tiempo_total"]
+        ])
 
-    for fila in datos:
-        ws.append(fila)
-
-    # Guardar archivo
     wb.save(ruta_completa)
     print(f"✅ Informe automático guardado en: {ruta_completa}")
+
+
 
 
 @app.route("/generar_informe_diario")
