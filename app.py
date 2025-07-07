@@ -706,10 +706,6 @@ def obtener_registros_procesados():
 
     return registros
 
-@app.route("/generar_informe_diario")
-def generar_informe_diario():
-    hoy = date.today().strftime("%Y-%m-%d")
-    return redirect(url_for("exportar_excel", fecha_inicio=hoy, fecha_fin=hoy))
 
 
 
@@ -743,9 +739,6 @@ def guardar_auto_informe():
 
 
 
-    return jsonify({"success": True})
-
-
 @app.route("/auto_config")
 def obtener_auto_config():
     if os.path.exists(AUTO_CONFIG_PATH):
@@ -774,14 +767,15 @@ def health():
     return "OK", 200
 
 
+# 🔚 Bloque final que se ejecuta al iniciar la app (modo local o en Railway)
+with app.app_context():
+    crear_bd_si_no_existe()
+    inicializar_auto_informe()
+
 if __name__ == "__main__":
-    with app.app_context():
-        crear_bd_si_no_existe()
-        inicializar_auto_informe()
+    print("🟢 Servidor Flask corriendo en modo desarrollo (local)")
     app.run(debug=True)
 else:
-    # Ejecutar también cuando Gunicorn lo importe
-    with app.app_context():
-        crear_bd_si_no_existe()
-        inicializar_auto_informe()
+    print("🟢 Servidor Flask iniciado por Gunicorn (producción)")
+
 
