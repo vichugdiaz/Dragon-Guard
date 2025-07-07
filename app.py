@@ -77,6 +77,10 @@ def dias_restantes_licencia():
     except:
         return None
 
+def ahora_colombia():
+    return datetime.now(timezone("America/Bogota"))
+
+
 # =====================
 # MODELOS DE BASE DE DATOS
 # =====================
@@ -125,7 +129,7 @@ def crear_bd_si_no_existe():
 
 def generar_excel_automatico():
     # Obtener fecha actual
-    fecha = datetime.now().strftime("%Y-%m-%d")
+    fecha = ahora_colombia().strftime("%Y-%m-%d")
     nombre_archivo = f"reporte_diario_{fecha}.xlsx"
 
     # Ruta segura para guardar el archivo
@@ -174,24 +178,25 @@ def generar_informe_programado():
 
 
 def inicializar_auto_informe():
+    config = {}
     if os.path.exists(AUTO_CONFIG_PATH):
         with open(AUTO_CONFIG_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            activo = data.get("activo", False)
-            hora = data.get("hora", "00:00")
+            config = json.load(f)
 
-            if activo and hora:
-                hora_dt = datetime.strptime(hora, "%H:%M").time()
-                if scheduler.get_job("informe_diario"):
-                    scheduler.remove_job("informe_diario")
-                scheduler.add_job(
-                    func=generar_informe_programado,
-                    trigger="cron",
-                    hour=hora_dt.hour,
-                    minute=hora_dt.minute,
-                    id="informe_diario",
-                    replace_existing=True
-                )
+    if config.get("activo") and config.get("hora"):
+        hora_dt = datetime.strptime(config["hora"], "%H:%M").time()
+        scheduler.add_job(
+            func=generar_informe_programado,
+            trigger="cron",
+            hour=hora_dt.hour,
+            minute=hora_dt.minute,
+            id="informe_diario",
+            replace_existing=True
+        )
+        print(f"🕒 Tarea programada activada para las {hora_dt}")
+    else:
+        print("⚠️ No hay tarea programada activa.")
+
 
 
 # =====================
@@ -763,6 +768,27 @@ atexit.register(lambda: scheduler.shutdown())
 # =====================
 # EJECUCIÓN PRINCIPAL
 # =====================
+
+@app.route("/descargar_informe_diario")
+def descargar_informe_diario():
+    fecha = ahora_colombia().strftime("%Y-%m-%d")
+    nombre_archivo = f"reporte_diario_{fecha}.xlsx"
+    ruta_archivo = os.path.join("instance", nombre_archivo)
+
+    if os.path.exists(ruta_archivo):
+        return send_file(ruta_archivo, as_attachment=True)
+    else:
+        return "❌ El informe del día no ha sido generado aún.", 404
+
+
+@app.route("/hora_actual")
+def hora_actual():
+    bogota = ahora_colombia().strftime("%Y-%m-%d %H:%M:%S")
+    utc = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    return f"🕒 Hora Colombia: {bogota} | UTC: {utc}"
+
+
+
 
 @app.route("/health")
 def health():
