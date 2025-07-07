@@ -15,6 +15,7 @@ from fpdf import FPDF
 import os, json, pandas as pd, sqlite3
 from openpyxl import Workbook
 from apscheduler.schedulers.background import BackgroundScheduler
+from pytz import timezone
 import atexit
 import shutil
 
@@ -169,6 +170,7 @@ def generar_informe_programado():
             generar_excel_automatico()
         except Exception as e:
             print(f"❌ Error al generar informe automático: {e}")
+
 
 
 def inicializar_auto_informe():
