@@ -121,38 +121,63 @@ def crear_bd_si_no_existe():
 # INFORME AUTOMÁTICO - INICIALIZACIÓN
 # =====================
 
+
 def generar_excel_automatico():
-    hoy = date.today().strftime("%Y-%m-%d")
-    registros = obtener_registros_filtrados(fecha_inicio=hoy, fecha_fin=hoy)
+    # Obtener fecha actual
+    fecha = datetime.now().strftime("%Y-%m-%d")
+    nombre_archivo = f"reporte_diario_{fecha}.xlsx"
 
-    if not registros:
-        return
+    # Ruta segura para guardar el archivo
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    carpeta_destino = os.path.join(basedir, "instance")
+    ruta_completa = os.path.join(carpeta_destino, nombre_archivo)
 
+    # Crear carpeta instance si no existe
+    os.makedirs(carpeta_destino, exist_ok=True)
+
+    # Crear libro Excel
     wb = Workbook()
     ws = wb.active
-    ws.title = "Historial Diario"
-    ws.append(["Cédula", "Nombre", "Fecha", "Hora Entrada", "Hora Salida", "Estado", "Tiempo"])
+    ws.title = "Informe Diario"
 
-    for r in registros:
-        ws.append([
-            r["cedula"],
-            r["nombre"],
-            r["fecha"],
-            r["hora_entrada"],
-            r["hora_salida"],
-            r["estado"],
-            r["tiempo_total"]
-        ])
+    # Encabezado de ejemplo
+    ws.append(["Cédula", "Nombre", "Hora Entrada", "Hora Salida", "Duración"])
 
-    nombre_archivo = f"reporte_diario_{hoy}.xlsx"
-    carpeta_descargas = os.path.join(os.path.expanduser("~"), "Downloads")
-    ruta_completa = os.path.join(carpeta_descargas, nombre_archivo)
+    # Puedes reemplazar esta parte con tus registros reales
+    datos = [
+        ["12345678", "Juan Pérez", "08:00", "17:00", "9h"],
+        ["87654321", "Ana Gómez", "08:15", "17:10", "8h 55m"]
+    ]
+
+    for fila in datos:
+        ws.append(fila)
+
+    # Guardar archivo
     wb.save(ruta_completa)
-    print(f"[✔] Informe diario exportado automáticamente a {ruta_completa}")
+    print(f"✅ Informe automático guardado en: {ruta_completa}")
+
+
+@app.route("/generar_informe_diario")
+def generar_informe_diario():
+    hoy = date.today().strftime("%Y-%m-%d")
+    return redirect(url_for("exportar_excel", fecha_inicio=hoy, fecha_fin=hoy))
+
 
 def generar_informe_programado():
     with app.app_context():
-        generar_excel_automatico()
+        try:
+            generar_excel_automatico()
+        except Exception as e:
+            print(f"❌ Error al generar informe automático: {e}")
+
+
+def generar_informe_programado():
+    with app.app_context():
+        try:
+            generar_excel_automatico()
+        except Exception as e:
+            print(f"❌ Error al generar informe automático: {e}")
+
 
 def inicializar_auto_informe():
     if os.path.exists(AUTO_CONFIG_PATH):
