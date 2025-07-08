@@ -115,6 +115,13 @@
             </div>
         </form>
 
+        <!-- 📂 Enlace a informes automáticos -->
+        <div class="mb-4 text-center">
+            <a href="{{ url_for('informes_disponibles') }}" class="btn btn-outline-info btn-sm">
+                📂 Ver informes guardados
+            </a>
+        </div>
+
         <h5>Cambiar clave del administrador</h5>
         <form action="{{ url_for('cambiar_clave_admin') }}" method="POST" class="mb-4 row g-2">
             <div class="col-md-4 col-sm-8">

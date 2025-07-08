@@ -197,6 +197,30 @@ def inicializar_auto_informe():
     else:
         print("⚠️ No hay tarea programada activa.")
 
+@app.route("/informes_disponibles")
+def informes_disponibles():
+    if session.get("rol") != "admin":
+        return redirect(url_for("login_admin"))
+
+    ruta = os.path.join("instance")
+    if not os.path.exists(ruta):
+        os.makedirs(ruta)
+
+    archivos = sorted(
+        [f for f in os.listdir(ruta) if f.endswith(".xlsx")],
+        reverse=True
+    )
+
+    return render_template("informes.html", archivos=archivos)
+
+
+@app.route("/descargar_informe_directo/<nombre>")
+def descargar_informe_directo(nombre):
+    ruta = os.path.join("instance", nombre)
+    if os.path.exists(ruta):
+        return send_file(ruta, as_attachment=True)
+    else:
+        return "⚠️ Archivo no encontrado.", 404
 
 
 # =====================
