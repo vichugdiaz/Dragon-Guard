@@ -9,3 +9,4 @@ fpdf==1.7.2
 apscheduler==3.10.4
 gunicorn
 XlsxWriter==3.2.0
+pytz==2024.1
