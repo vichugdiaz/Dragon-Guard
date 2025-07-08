@@ -176,7 +176,6 @@ def generar_informe_programado():
             print(f"❌ Error al generar informe automático: {e}")
 
 
-
 def inicializar_auto_informe():
     config = {}
     if os.path.exists(AUTO_CONFIG_PATH):
@@ -184,18 +183,24 @@ def inicializar_auto_informe():
             config = json.load(f)
 
     if config.get("activo") and config.get("hora"):
+        # Obtener hora con conciencia de zona horaria
         hora_dt = datetime.strptime(config["hora"], "%H:%M").time()
+        hora_colombia = datetime.combine(
+            ahora_colombia().date(), hora_dt
+        )
+
         scheduler.add_job(
             func=generar_informe_programado,
             trigger="cron",
-            hour=hora_dt.hour,
-            minute=hora_dt.minute,
+            hour=hora_colombia.hour,
+            minute=hora_colombia.minute,
             id="informe_diario",
             replace_existing=True
         )
-        print(f"🕒 Tarea programada activada para las {hora_dt}")
+        print(f"🕒 Tarea programada activada para las {hora_colombia.strftime('%H:%M')} 🇨🇴")
     else:
         print("⚠️ No hay tarea programada activa.")
+
 
 @app.route("/informes_disponibles")
 def informes_disponibles():
@@ -570,8 +575,8 @@ def obtener_registros_filtrados(cedula=None, fecha_inicio=None, fecha_fin=None):
                 if i + 1 < len(lista) and lista[i + 1].tipo == "salida":
                     salida = lista[i + 1].hora
                     estado = "Entrada y Salida"
-                    entrada_dt = datetime.combine(fecha, entrada)
-                    salida_dt = datetime.combine(fecha, salida)
+                    entrada_dt = timezone("America/Bogota").localize(datetime.combine(fecha, entrada))
+                    salida_dt = timezone("America/Bogota").localize(datetime.combine(fecha, salida))
                     tiempo_total = str(salida_dt - entrada_dt).split('.')[0]
                     i += 2
                 else:
@@ -722,8 +727,9 @@ def obtener_registros_procesados():
             tiempo_total = "---"
             if r.tipo == "entrada":
                 if i + 1 < len(registros_list) and registros_list[i + 1].tipo == "salida":
-                    entrada = datetime.combine(r.fecha, r.hora)
-                    salida = datetime.combine(registros_list[i + 1].fecha, registros_list[i + 1].hora)
+                    zona_col = timezone("America/Bogota")
+                    entrada = zona_col.localize(datetime.combine(r.fecha, r.hora))
+                    salida = zona_col.localize(datetime.combine(registros_list[i + 1].fecha, registros_list[i + 1].hora))
                     delta = salida - entrada
                     tiempo_total = str(delta).split('.')[0]
 
@@ -752,14 +758,16 @@ def guardar_auto_informe():
 
     if activo and hora:
         hora_dt = datetime.strptime(hora, "%H:%M").time()
+        hora_colombia = datetime.combine(ahora_colombia().date(), hora_dt)
+
         if scheduler.get_job("informe_diario"):
             scheduler.remove_job("informe_diario")
 
         scheduler.add_job(
             func=generar_informe_programado,
             trigger="cron",
-            hour=hora_dt.hour,
-            minute=hora_dt.minute,
+            hour=hora_colombia.hour,
+            minute=hora_colombia.minute,
             id="informe_diario",
             replace_existing=True
         )
@@ -768,6 +776,7 @@ def guardar_auto_informe():
             scheduler.remove_job("informe_diario")
 
     return jsonify({"success": True})
+
 
 
 
