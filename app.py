@@ -35,7 +35,7 @@ db = SQLAlchemy(app)
 RUTA_LOGOS = os.path.join("static", "logos")
 CONFIG_PATH = os.path.join(basedir, "config.json")
 AUTO_CONFIG_PATH = os.path.join(basedir, "auto_config.json")
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone=timezone("America/Bogota"))
 scheduler.start()
 
 # =====================
@@ -74,7 +74,7 @@ def dias_restantes_licencia():
     config = cargar_config()
     try:
         fecha_fin = datetime.strptime(config.get("licencia", ""), "%Y-%m-%d").date()
-        hoy = datetime.now().date()
+        hoy = ahora_colombia().date()  # ✅ CORREGIDO
         return max((fecha_fin - hoy).days, 0)
     except:
         return None
@@ -135,8 +135,8 @@ def generar_excel_automatico():
 
     basedir = os.path.abspath(os.path.dirname(__file__))
     carpeta_destino = os.path.join(basedir, "instance")
-    ruta_completa = os.path.join(carpeta_destino, nombre_archivo)
     os.makedirs(carpeta_destino, exist_ok=True)
+    ruta_completa = os.path.join(carpeta_destino, nombre_archivo)
 
     registros = obtener_registros_filtrados(None, fecha, fecha)
 
@@ -247,7 +247,7 @@ def index():
         if not empleado:
             error = "⚠️ FAVOR NOTIFICAR AL ADMINISTRADOR DEL SISTEMA PARA CREAR AL EMPLEADO"
         else:
-            ahora = datetime.now()
+            ahora = ahora_colombia()  # ✅ CORREGIDO
             hoy = ahora.date()
 
             # Último registro del día para este empleado
@@ -286,7 +286,7 @@ def licencia():
         if clave == "2185":
             try:
                 dias = int(dias)
-                fecha_fin = datetime.now().date() + timedelta(days=dias)
+                fecha_fin = ahora_colombia().date() + timedelta(days=dias)  # ✅ CORREGIDO
                 config["licencia"] = fecha_fin.strftime("%Y-%m-%d")
                 guardar_config(config)
                 mensaje = f"✔️ Licencia activada hasta {fecha_fin.strftime('%d/%m/%Y')}."
@@ -681,7 +681,7 @@ def registro_dashboard():
         flash("⚠ FAVOR NOTIFICAR A SU ADMINISTRADOR DEL SISTEMA PARA CREAR AL EMPLEADO.", "danger")
         return redirect(url_for("index"))
 
-    ahora = datetime.now()
+    ahora = ahora_colombia()  # ✅ Corrige la hora para que sea hora de Colombia
     fecha = ahora.date()
     hora = ahora.time()
 
@@ -700,6 +700,7 @@ def registro_dashboard():
 
     flash(f"✔ {tipo.capitalize()} registrada exitosamente para {empleado.nombre}", "success")
     return redirect(url_for("index"))
+
 
 def obtener_registros_procesados():
     registros_raw = Registro.query.order_by(Registro.fecha.desc(), Registro.hora.desc()).all()
