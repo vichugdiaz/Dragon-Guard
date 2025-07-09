@@ -777,6 +777,18 @@ def guardar_auto_informe():
 
     return jsonify({"success": True})
 
+@app.route("/eliminar_informe", methods=["POST"])
+def eliminar_informe():
+    nombre = request.form.get("filename")
+    ruta = os.path.join("instance", nombre)
+
+    if os.path.exists(ruta):
+        os.remove(ruta)
+        flash(f"🗑 Informe '{nombre}' eliminado correctamente.", "success")
+    else:
+        flash("⚠ No se encontró el archivo a eliminar.", "danger")
+
+    return redirect(url_for("ver_informes"))
 
 
 
