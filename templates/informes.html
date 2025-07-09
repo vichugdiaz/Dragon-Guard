@@ -34,6 +34,17 @@
             <p class="text-muted">Archivos guardados en el sistema disponibles para descarga.</p>
         </div>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show text-center" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {% if archivos %}
         <div class="card shadow-sm">
             <div class="card-body table-responsive">
