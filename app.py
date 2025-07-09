@@ -789,7 +789,7 @@ def eliminar_informe():
     else:
         flash("⚠ No se encontró el archivo a eliminar.", "danger")
 
-    return redirect(url_for("ver_informes"))
+    return redirect(url_for("informes_disponibles"))
 
 
 
